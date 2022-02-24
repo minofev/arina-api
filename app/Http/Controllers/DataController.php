@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\GeneralData;
 use App\Models\TableSplit;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 class DataController extends Controller
@@ -189,10 +190,22 @@ class DataController extends Controller
 
             if($item === 'page') continue;
 
-            if($foreachCounter == 1){
+            // эту срань с датами надо переписать
+            // но времени нет
+            // т.к. Дима ждет апдейта
+            if($foreachCounter == 1 && $item != 'ad_added' && $item != 'ad_published' && $item != 'ad_remove'){
                 $whereRaw = $item . " = '" . $key . "'";
-            }else{
-                $whereRaw = $whereRaw . " AND " . $item . " = '" . $key . "'";
+            }else if($foreachCounter == 1 && ($item == 'ad_added' || $item == 'ad_published' || $item == 'ad_remove')){
+                $key = Carbon::parse($key)->timestamp;
+                $whereRaw = $whereRaw . " ($item >= $key and $item <= ". (intval($key) + 3600 * 24) .")";
+            } else{
+                if($item == 'ad_added'){
+                    $key = Carbon::parse($key)->timestamp;
+                    $whereRaw = $whereRaw . " AND ($item >= $key and $item <= ". (intval($key) + 3600 * 24) .")";
+                }else{
+                    $whereRaw = $whereRaw . " AND " . $item . " = '" . $key . "'";
+                }
+
             }
         }
 
@@ -212,6 +225,10 @@ class DataController extends Controller
         }
         if($request->name == "square_meter_price"){
             $request->value = $request->value * 1000;
+        }
+
+        if($request->name == "comments" && $request->value == ""){
+            $request->value = 'пусто';
         }
 
         GeneralData::where('id', $request->id)->update([$request->name => $request->value]);
