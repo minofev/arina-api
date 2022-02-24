@@ -44,7 +44,7 @@ class AppServiceProvider extends ServiceProvider
 
             Log::build([
                 'driver' => 'single',
-                'path' => storage_path('logs/database/databaseRequests'. Carbon::now('Y-m-d') .'.log'),
+                'path' => storage_path('logs/database/databaseRequests'. Carbon::now()->format('Y-m-d') .'.log'),
             ])->info($text);
         });
     }
