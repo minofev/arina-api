@@ -222,7 +222,15 @@ class DataController extends Controller
                 if($key == 'Да'){$key = 1;} else if($key == 'Нет'){$key = 0;}else{$key = "ERROR";}
 
                 $whereRaw = $whereRaw . $item . " = '" . $key . "'";
-            }else{
+            } else if($item == 'status'){
+                if($key == 'Все записи'){
+                    $key = "IS NOT NULL";
+                }
+
+                $whereRaw = $whereRaw . $item . " " . $key . "";
+            }
+            else{
+
                 $whereRaw = $whereRaw . $item . " = '" . $key . "'";
             }
 
