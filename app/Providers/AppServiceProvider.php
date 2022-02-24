@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\ServiceProvider;
@@ -43,7 +44,7 @@ class AppServiceProvider extends ServiceProvider
 
             Log::build([
                 'driver' => 'single',
-                'path' => storage_path('logs/databaseRequests.log'),
+                'path' => storage_path('logs/database/databaseRequests'. Carbon::now('Y-m-d') .'.log'),
             ])->info($text);
         });
     }
