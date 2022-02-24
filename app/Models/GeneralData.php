@@ -58,8 +58,8 @@ class GeneralData extends Model
             }
 
             $model->ad_published = Carbon::createFromTimestamp($model->ad_published)->format('d-m-Y');
-            $model->ad_added = $model->ad_added ? "" : Carbon::createFromTimestamp($model->ad_added)->format('d-m-Y');
-            $model->ad_remove = $model->ad_remove ? "" : Carbon::createFromTimestamp($model->ad_remove)->format('d-m-Y');
+            $model->ad_added = $model->ad_added == 0 ? "" : Carbon::createFromTimestamp($model->ad_added)->format('d-m-Y');
+            $model->ad_remove = $model->ad_remove == 0 ? "" : Carbon::createFromTimestamp($model->ad_remove)->format('d-m-Y');
 
             $model->have_doubles = $model->have_doubles ? "Нет" : "Да";
 
