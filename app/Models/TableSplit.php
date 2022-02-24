@@ -23,20 +23,20 @@ class TableSplit extends Model
             $model->title = $model->name;
             $model->dataIndex = $model->bd_name;
             $model->key = $model->bd_name;
-            $model->input = 0;
-            $model->input_list = [];
+            $model->select = 0;
+            $model->select_list = [];
 
             if($model->bd_name == 'have_doubles'){
-                $model->input = 1;
-                $model->input_list = [
+                $model->select = 1;
+                $model->select_list = [
                     "Да",
                     "Нет"
                 ];
             }
 
             if($model->bd_name == 'status'){
-                $model->input = 1;
-                $model->input_list = [
+                $model->select = 1;
+                $model->select_list = [
                     "Все записи",
                     "Пустые записи",
                     "1.Оцениваем",
