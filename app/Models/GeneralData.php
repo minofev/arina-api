@@ -57,11 +57,15 @@ class GeneralData extends Model
                 $model->notRemovedAnalogAdsAvgPrice = $notRemovedAnalogAdsAvgPriceSign . "." . $sootn_square_meter_price_to_analogs . "%";
             }
 
-            $model->ad_added = Carbon::createFromTimestamp($model->ad_added)->format('d-m-Y');
             $model->ad_published = Carbon::createFromTimestamp($model->ad_published)->format('d-m-Y');
-            $model->ad_remove = Carbon::createFromTimestamp($model->ad_remove)->format('d-m-Y');
+            $model->ad_added = $model->ad_added ? "" : Carbon::createFromTimestamp($model->ad_added)->format('d-m-Y');
+            $model->ad_remove = $model->ad_remove ? "" : Carbon::createFromTimestamp($model->ad_remove)->format('d-m-Y');
 
             $model->have_doubles = $model->have_doubles ? "Нет" : "Да";
+
+            if($model->id_source == 1){ $model->id_source = "Циан"; }
+            else if($model->id_source == 2){ $model->id_source = "Авито"; }
+            else {$model->id_source = "ОШИБКА"; }
         });
     }
 }
