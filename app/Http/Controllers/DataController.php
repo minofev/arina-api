@@ -218,6 +218,10 @@ class DataController extends Controller
 
                 // формируем запрос
                 $whereRaw = $whereRaw . " ($item >= $key and $item <= ". (intval($key) + 3600 * 24) .")";
+            } else if($item == 'have_doubles') {
+                if($key == 'Да'){$key = 1;} else if($key == 'Нет'){$key = 0;}else{$key = "ERROR";}
+
+                $whereRaw = $whereRaw . $item . " = '" . $key . "'";
             }else{
                 $whereRaw = $whereRaw . $item . " = '" . $key . "'";
             }
