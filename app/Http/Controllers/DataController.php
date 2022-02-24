@@ -188,26 +188,42 @@ class DataController extends Controller
         foreach ($items as $item=>$key) {
             $foreachCounter++;
 
+            // чтобы с пагинацией багов не было
             if($item === 'page') continue;
 
-            // эту срань с датами надо переписать
-            // но времени нет
-            // т.к. Дима ждет апдейта
-            if($foreachCounter == 1 && $item != 'ad_added' && $item != 'ad_published' && $item != 'ad_remove'){
-                $whereRaw = $item . " = '" . $key . "'";
-            }else if($foreachCounter == 1 && ($item == 'ad_added' || $item == 'ad_published' || $item == 'ad_remove')){
-                $key = Carbon::parse($key)->timestamp;
-                $whereRaw = $whereRaw . " ($item >= $key and $item <= ". (intval($key) + 3600 * 24) .")";
-            } else{
-                if($item == 'ad_added'){
-                    $key = Carbon::parse($key)->timestamp;
-                    $whereRaw = $whereRaw . " AND ($item >= $key and $item <= ". (intval($key) + 3600 * 24) .")";
-                }else{
-                    $whereRaw = $whereRaw . " AND " . $item . " = '" . $key . "'";
+            // если больше одной итерации - добавляем оператор AND
+            if($foreachCounter > 1){
+                $whereRaw = $whereRaw . " AND ";
+            }
+
+            if($item == 'ad_added' || $item == 'ad_published' || $item == 'ad_remove'){
+                // при условии что дата всегда в формате день-месяц-год
+                // поочередность конкретно, на разделитель не смотрим
+                // делим строку по разделителю
+                // который узнаем через mb_substr
+                $date = explode(mb_substr($key, 2, 1), $key);
+                // далее год записываем в $year
+                $year = $date[2];
+
+                // если в "году" всего 2 символа, добавляем в начало 20 (чтобы получился 2022 напирмер)
+                if(iconv_strlen($year) == 2){
+                    $year = "20" . $year;
                 }
 
+                // формируем полную дату
+                $key = $date[0] . "-" . $date[1] . "-" . $year;
+
+                // переводим в unix метку
+                $key = Carbon::parse($key)->timestamp;
+
+                // формируем запрос
+                $whereRaw = $whereRaw . " ($item >= $key and $item <= ". (intval($key) + 3600 * 24) .")";
+            }else{
+                $whereRaw = $whereRaw . $item . " = '" . $key . "'";
             }
+
         }
+
 
         $data = GeneralData::whereRaw($whereRaw)->paginate(50);
 
