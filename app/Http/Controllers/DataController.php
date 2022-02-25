@@ -9,19 +9,19 @@ use Illuminate\Http\Request;
 
 class DataController extends Controller
 {
-    /**
-     * метод получения первых данных для отрисовки страницы
-     * дергается сразу при загрузке таблицы
-     */
-    public function get()
-    {
-        // данные
-        $data = GeneralData::orderBy('id', 'desc')->paginate(50);
-
-        return response()->json([
-            'data' => $data
-        ])->setStatusCode(200);
-    }
+//    /**
+//     * метод получения первых данных для отрисовки страницы
+//     * дергается сразу при загрузке таблицы
+//     */
+//    public function get()
+//    {
+//        // данные
+//        $data = GeneralData::orderBy('id', 'desc')->paginate(50);
+//
+//        return response()->json([
+//            'data' => $data
+//        ])->setStatusCode(200);
+//    }
 
     public function columns()
     {
@@ -263,6 +263,103 @@ class DataController extends Controller
 
         return response()->json([
             'message' => 'successfull',
+            'code' => 200
+        ])->setStatusCode(200);
+    }
+
+    public function get(Request $request)
+    {
+        // select - выборка
+        // sort - сортировка
+
+        // сюда будем записывать sql выборки
+        $whereRaw = "";
+
+        // сюда будем записываться sql сортировки
+        $sortRaw = "";
+
+        // сначала делаем выборку
+        // чтобы при сортировке уменьшить колво записей в коллекции
+        if(!empty($request->select)){
+            // счетчик цикла
+            $foreachCounter = 0;
+            foreach ($request->select as $item=>$value) {
+                $foreachCounter++;
+
+                // если больше одной итерации - добавляем оператор AND
+                if($foreachCounter > 1){
+                    $whereRaw = $whereRaw . " AND ";
+                }
+
+                if($item == 'ad_added' || $item == 'ad_published' || $item == 'ad_remove'){
+                    // при условии что дата всегда в формате день-месяц-год
+                    // поочередность конкретно, на разделитель не смотрим
+                    // делим строку по разделителю
+                    // который узнаем через mb_substr
+                    $date = explode(mb_substr($value, 2, 1), $value);
+                    // далее год записываем в $year
+                    $year = $date[2];
+
+                    // если в "году" всего 2 символа, добавляем в начало 20 (чтобы получился 2022 напирмер)
+                    if(iconv_strlen($year) == 2){
+                        $year = "20" . $year;
+                    }
+
+                    // формируем полную дату
+                    $value = $date[0] . "-" . $date[1] . "-" . $year;
+
+                    // переводим в unix метку
+                    $key = Carbon::parse($value)->timestamp;
+
+                    // формируем запрос
+                    $whereRaw = $whereRaw . " ($item >= $value and $item <= ". (intval($value) + 3600 * 24) .")";
+                } else if($item == 'have_doubles') {
+                    if($value == 'Да'){$value = 1;} else if($value == 'Нет'){$value = 0;}else{$value = "ERROR";}
+
+                    $whereRaw = $whereRaw . $item . " = '" . $value . "'";
+                } else if($item == 'status'){
+                    if($value == 'Все записи'){
+                        $value = "IS NOT NULL";
+                    }
+
+                    $whereRaw = $whereRaw . $item . " = '" . $value . "'";
+                }
+                else{
+
+                    $whereRaw = $whereRaw . "$item = '$value'";
+                }
+            }
+        }
+
+        if(!empty($request->sort)){
+            // счетчик цикла
+            $foreachCounter = 0;
+            foreach ($request->sort as $item=>$value) {
+                $foreachCounter++;
+
+                if($foreachCounter > 1){
+                    $sortRaw = $sortRaw . " ";
+                }
+                $sortRaw = $sortRaw . "$item " . strtoupper($value);
+            }
+        }
+
+        if(empty($sortRaw) && !empty($whereRaw)){
+            // если пустая сортировка и не пустая выборка
+            $data = GeneralData::whereRaw($whereRaw)->paginate($request->itemscount);
+        }else if(empty($whereRaw) && !empty($sortRaw)){
+            // если пустая выборка и не пустая сортировка
+            $data = GeneralData::orderByRaw($sortRaw)->paginate($request->itemscount);
+        }else if(empty($whereRaw) && empty($sortRaw)){
+            // если пустая выборка и сортировка
+            $data = GeneralData::paginate($request->itemscount);
+        }else{
+            // если есть и сортировка и выборка вместе
+            $data = GeneralData::orderByRaw($sortRaw)->whereRaw($whereRaw)->paginate($request->itemscount);
+        }
+
+        return response()->json([
+            'data' => $data,
             'code' => 200
         ])->setStatusCode(200);
     }
