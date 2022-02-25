@@ -9,19 +9,19 @@ use Illuminate\Http\Request;
 
 class DataController extends Controller
 {
-//    /**
-//     * метод получения первых данных для отрисовки страницы
-//     * дергается сразу при загрузке таблицы
-//     */
-//    public function get()
-//    {
-//        // данные
-//        $data = GeneralData::orderBy('id', 'desc')->paginate(50);
-//
-//        return response()->json([
-//            'data' => $data
-//        ])->setStatusCode(200);
-//    }
+    /**
+     * метод получения первых данных для отрисовки страницы
+     * дергается сразу при загрузке таблицы
+     */
+    public function get()
+    {
+        // данные
+        $data = GeneralData::orderBy('id', 'desc')->paginate(50);
+
+        return response()->json([
+            'data' => $data
+        ])->setStatusCode(200);
+    }
 
     public function columns()
     {
@@ -267,7 +267,7 @@ class DataController extends Controller
         ])->setStatusCode(200);
     }
 
-    public function get(Request $request)
+    public function v2__get(Request $request)
     {
         // select - выборка
         // sort - сортировка

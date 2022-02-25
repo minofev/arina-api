@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Route;
 */
 Route::group(['prefix' => 'v1'], function($router) {
     Route::group(['prefix' => 'data'], function($router) {
-        //Route::post('/get', [\App\Http\Controllers\DataController::class, 'get']);
+        Route::post('/get', [\App\Http\Controllers\DataController::class, 'get']);
         Route::post('/sort', [\App\Http\Controllers\DataController::class, 'sort']);
         Route::post('/take', [\App\Http\Controllers\DataController::class, 'take']);
         Route::post('/change', [\App\Http\Controllers\DataController::class, 'change']);
@@ -25,6 +25,6 @@ Route::group(['prefix' => 'v1'], function($router) {
 
 Route::group(['prefix' => 'v2'], function($router) {
     Route::group(['prefix' => 'data'], function($router) {
-        Route::post('/get', [\App\Http\Controllers\DataController::class, 'get']);
+        Route::post('/get', [\App\Http\Controllers\DataController::class, 'v2__get']);
     });
 });
