@@ -327,7 +327,9 @@ class DataController extends Controller
 
                     $whereRaw = $whereRaw . $item . " = '" . $value . "'";
                 } else if($item == 'price_actual'){
-                    $value = $value * 1000000;
+                    $value = intval($value * 1000000);
+
+                    $whereRaw = $whereRaw . $item . " = " . $value;
                 }
                 else{
 
