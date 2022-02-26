@@ -310,10 +310,10 @@ class DataController extends Controller
                     $value = $date[0] . "-" . $date[1] . "-" . $year;
 
                     // переводим в unix метку
-                    $key = Carbon::parse($value)->timestamp;
+                    $value = Carbon::parse($value)->timestamp;
 
                     // формируем запрос
-                    $whereRaw = $whereRaw . " ($item >= $value and $item <= ". (intval($value) + 3600 * 24) .")";
+                    $whereRaw = $whereRaw . " ($item >= ". (intval($value) + 3600 * 3) ." and $item <= ". (intval($value) + 3600 * 24) .")";
                 } else if($item == 'have_doubles') {
                     if($value == 'Да'){$value = 1;} else if($value == 'Нет'){$value = 0;}else{$value = "ERROR";}
 

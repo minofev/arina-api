@@ -58,9 +58,14 @@ class GeneralData extends Model
                 $model->notRemovedAnalogAdsAvgPrice = $notRemovedAnalogAdsAvgPriceSign . "." . $sootn_square_meter_price_to_analogs . "%";
             }
 
-            $model->ad_published = $model->ad_published == 0 ? "" : Carbon::createFromTimestamp($model->ad_published)->format('d-m-Y');
-            $model->ad_added = $model->ad_added == 0 ? "" : Carbon::createFromTimestamp($model->ad_added)->format('d-m-Y');
-            $model->ad_remove = $model->ad_remove == 0 ? "" : Carbon::createFromTimestamp($model->ad_remove)->format('d-m-Y');
+            // к каждой дате прибавляем 3 часа
+            // т.к. время в unix метке, если переводим, то получается 21:00 часа по Гринвичу
+            // Разница Москвы и Гринвича 3 часа
+            // по этому к дате прибавляем 3 часа
+            // и конвертируем
+            $model->ad_published = $model->ad_published == 0 ? "" : Carbon::createFromTimestamp(intval($model->ad_published) + 3600 * 3)->format('d-m-Y');
+            $model->ad_added = $model->ad_added == 0 ? "" : Carbon::createFromTimestamp(intval($model->ad_added) + 3600 * 3)->format('d-m-Y');
+            $model->ad_remove = $model->ad_remove == 0 ? "" : Carbon::createFromTimestamp(intval($model->ad_remove) + 3600 * 3)->format('d-m-Y');
 
             $model->have_doubles = $model->have_doubles == 0 ? "Нет" : "Да";
 
