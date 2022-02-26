@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Middleware\PreventRequestsDuringMaintenance;
 use App\Models\GeneralData;
 use App\Models\TableSplit;
 use Carbon\Carbon;
@@ -320,6 +321,8 @@ class DataController extends Controller
                 } else if($item == 'status'){
                     if($value == 'Все записи'){
                         $value = "IS NOT NULL";
+                    }else if($value == 'Пустые записи'){
+                        $value = "";
                     }
 
                     $whereRaw = $whereRaw . $item . " = '" . $value . "'";
