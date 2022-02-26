@@ -293,27 +293,41 @@ class DataController extends Controller
                 }
 
                 if($item == 'ad_added' || $item == 'ad_published' || $item == 'ad_remove'){
-                    // при условии что дата всегда в формате день-месяц-год
-                    // поочередность конкретно, на разделитель не смотрим
-                    // делим строку по разделителю
-                    // который узнаем через mb_substr
-                    $date = explode(mb_substr($value, 2, 1), $value);
-                    // далее год записываем в $year
-                    $year = $date[2];
+                    if(iconv_strlen($value) > 12){
+                        // если указано от и до
+                    }else{
+                        // если всего одна дата
+                        $operators = ['>', '<', '=', '>=', '<='];
 
-                    // если в "году" всего 2 символа, добавляем в начало 20 (чтобы получился 2022 напирмер)
-                    if(iconv_strlen($year) == 2){
-                        $year = "20" . $year;
+                        // значение с оператором
+                        $valueWithOperator = $value;
+
+                        // значение без оператора
+                        $value = str_replace($operators, '', $valueWithOperator);
+
+                        // оператор
+                        $operatorValue = str_replace($value, '', $valueWithOperator);
+
+                        if(!$operatorValue || $operatorValue == '='){
+                            // если оператора нет
+                            // или в качестве оператора жеское сравнение
+                            // что по сути одно и то же
+
+                            // переводим в unix метку
+                            $value = Carbon::parse($value)->timestamp;
+
+                            // формируем запрос
+                            // и берем в охват целые сутки (с 00:00 до 24:00)
+                            $whereRaw = $whereRaw . " ($item >= ". (intval($value) - 3600 * 21) ." and $item <= ". (intval($value) + 3600 * 3) .")";
+                        }
+
+                        if($operatorValue && $operatorValue != '='){
+                            // переводим в unix метку
+                            $value = Carbon::parse($value)->timestamp;
+
+                            $whereRaw = $whereRaw . " $item " . $operatorValue . " " . (intval($value) - 3600 * 21);
+                        }
                     }
-
-                    // формируем полную дату
-                    $value = $date[0] . "-" . $date[1] . "-" . $year;
-
-                    // переводим в unix метку
-                    $value = Carbon::parse($value)->timestamp;
-
-                    // формируем запрос
-                    $whereRaw = $whereRaw . " ($item >= ". (intval($value) + 3600 * 3) ." and $item <= ". (intval($value) + 3600 * 24) .")";
                 } else if($item == 'have_doubles') {
                     if($value == 'Да'){$value = 1;} else if($value == 'Нет'){$value = 0;}else{$value = "ERROR";}
 
