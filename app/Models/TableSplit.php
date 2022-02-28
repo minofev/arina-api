@@ -26,9 +26,29 @@ class TableSplit extends Model
             $model->select = 0;
             $model->select_list = [];
 
+            if($model->bd_name == 'id_source'){
+                $model->select = 1;
+                $model->select_list = [
+                    "Все записи",
+                    "Авито",
+                    "Циан"
+                ];
+            }
+
+            if($model->bd_name == 'km_do_metro'){
+                $model->select = 1;
+                $model->select_list = [
+                    "Все записи",
+                    "До 1 км",
+                    "От 1 до 2км",
+                    "От 2 и более км"
+                ];
+            }
+
             if($model->bd_name == 'have_doubles'){
                 $model->select = 1;
                 $model->select_list = [
+                    "Все записи",
                     "Да",
                     "Нет"
                 ];

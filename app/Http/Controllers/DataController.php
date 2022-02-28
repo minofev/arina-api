@@ -335,17 +335,42 @@ class DataController extends Controller
                 } else if($item == 'status'){
                     if($value == 'Все записи'){
                         $value = "IS NOT NULL";
+
+                        $whereRaw = $whereRaw . $item . " = '" . $value . "'";
                     }else if($value == 'Пустые записи'){
                         $value = "";
-                    }
 
-                    $whereRaw = $whereRaw . $item . " = '" . $value . "'";
+                        $whereRaw = $whereRaw . $item . " = '" . $value . "'";
+                    }else if($value == 'Без дублей и ДДУ'){
+                        $value = "";
+
+                        $whereRaw = $whereRaw . $item . " != 'дубль' and ". $item . " != 'ДДУ'";
+                    }else if($value == 'Исключ. 9 парам.'){
+                        $value = "";
+
+                        $whereRaw = $whereRaw . $item . " != '9. На подготовку'";
+                    }
                 } else if($item == 'price_actual'){
                     $value = intval($value * 1000000);
 
                     $whereRaw = $whereRaw . $item . " = " . $value;
-                }
-                else{
+                } else if($item == 'km_do_metro') {
+                    if ($value == 'До 1 км') {
+                        $whereRaw = $whereRaw . $item . " <= 1";
+                    } else if ($value == 'От 1 до 2км') {
+                        $whereRaw = $whereRaw . $item . " >= 1 and " . $item . " <= 2";
+                    } else if ($value == 'От 2 и более км') {
+                        $whereRaw = $whereRaw . $item . "> 2";
+                    }
+                } else if($item == 'id_source'){
+                    if($value == 'Авито'){
+                        $value = 2;
+                    }else if($value == 'Циан'){
+                        $value = 1;
+                    }
+
+                    $whereRaw = $whereRaw . "$item = $value";
+                } else{
 
                     $whereRaw = $whereRaw . "$item = '$value'";
                 }
