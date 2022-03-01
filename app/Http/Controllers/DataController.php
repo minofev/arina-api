@@ -7,6 +7,7 @@ use App\Models\GeneralData;
 use App\Models\TableSplit;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class DataController extends Controller
 {
@@ -260,6 +261,10 @@ class DataController extends Controller
             $request->value = 'пусто';
         }
 
+        if($request->name == "auction"){
+            $request->value = intval($request->value * 1000000);
+        }
+
         GeneralData::where('id', $request->id)->update([$request->name => $request->value]);
 
         return response()->json([
@@ -349,6 +354,8 @@ class DataController extends Controller
                         $value = "";
 
                         $whereRaw = $whereRaw . $item . " != '9. На подготовку'";
+                    }else{
+                        $whereRaw = $whereRaw . $item . " = '" . $value . "'";
                     }
                 } else if($item == 'price_actual'){
                     $value = intval($value * 1000000);
@@ -362,6 +369,12 @@ class DataController extends Controller
                     } else if ($value == 'От 2 и более км') {
                         $whereRaw = $whereRaw . $item . "> 2";
                     }
+                } else if($item == 'city'){
+                    if($value == 'Пустые записи'){
+                        $value = "";
+                    }
+
+                    $whereRaw = $whereRaw . "$item = '$value'";
                 } else if($item == 'id_source'){
                     if($value == 'Авито'){
                         $value = 2;
@@ -403,10 +416,153 @@ class DataController extends Controller
             // если есть и сортировка и выборка вместе
             $data = GeneralData::orderByRaw($sortRaw)->whereRaw($whereRaw)->paginate($request->itemscount);
         }
+        $orderedColumns = array(
+            'id',
+            'id_source',
+            'adsapi_id',
+            'status',
+            'have_doubles',
+            'comments',
+            'auction',
+            'bonus',
+            'owners',
+            'registered',
+            'check_out',
+            'constitutive',
+            'new_coefficient',
+            'price_sale',
+            'target_profit',
+            'percentage_income',
+            'grand_yandk',
+            'grand_real',
+            'grand_cian',
+            'grand_avit',
+            'grand_pik',
+            'grand_irn',
+            'grand_dmk',
+            'standard_deviation',
+            'house_characteristics',
+            'legal_aspects',
+            'link',
+            '_fakt',
+            'price_actual',
+            'price_actual_to_current_day',
+            '_izmen',
+            'price_start',
+            'square_meter_price',
+            'square_meter_price2',
+            //'square_meter_price3',
+            //'square_meter_price4',
+            '_soot',
+            'accuracy',
+            'count_sold_objects',
+            'square_meter_price2_analog',
+            '_soot_analog',
+            '_soot_analog_to_current',
+            'accuracy_analog',
+            'count_analog',
+            'notRemovedAnalogAdsAvgPrice',
+            'notRemovedAnalogAdsCount',
+            'views_all',
+            'ad_remove',
+            'ad_published',
+            'ad_added',
+            'ad_updated',
+            'responsible_realtor_partner',
+            'offer_date',
+            'purchase_advance_date',
+            'date_of_purchase_transaction',
+            'sale_advertising_date',
+            'date_of_sale_advance',
+            'date_of_transaction_sale',
+            'region',
+            'address',
+            'city',
+            'street_prefix',
+            'street',
+            'house',
+            'phones',
+            'direct_phone',
+            'agent_type',
+            'phone_protected',
+            'phone_region',
+            'phone_operator',
+            'count_ads_same_phone',
+            'person_type',
+            'person',
+            'agent_id',
+            'contactname',
+            'coords',
+            'metro',
+            'km_do_metro',
+            'complex_name',
+            'house_rating',
+            // убираем
+            //'repair',
+            'new_repair',
+            'balconies',
+            'restroom',
+            'ceiling_height',
+            'objecttype',
+            'property_type',
+            'house_type',
+            'building_year',
+            'rooms_count',
+            'total_area',
+            'living_area',
+            'kitchen_area',
+            'current_floor',
+            'total_floors',
+            'with_photos',
+            'title',
+            'description',
+            'demand_test_results',
+            'nechaev',
+            'shavnev',
+            'dyakonov'
+        );
 
-        return response()->json([
-            'data' => $data,
-            'code' => 200
-        ])->setStatusCode(200);
+
+        if($request->csv){
+            $name = "username";
+            $array = $data;
+
+            $limitCounter = 50;
+            $startCounter = 0;
+            if(!empty($request->csvlimit)) {$limitCounter = $request->csvlimit;}
+
+            $path = storage_path('app/public/csv/');
+            $fileName = 'exportcsv_' . $name . '_' . time() . '.csv';
+            $file = fopen($path.$fileName, 'w');
+
+            fputcsv($file, $orderedColumns);
+
+            foreach ($array as $item){
+                $startCounter++;
+
+                $toFile = [];
+                foreach ($orderedColumns as $column) {
+                    array_push($toFile, $item[$column]);
+                }
+
+                fputcsv($file, $toFile);
+
+                if($limitCounter == $startCounter){break;}
+            }
+
+            fclose($file);
+            $url = Storage::url('csv/'.$fileName);
+
+            return response()->json([
+                'data' => $data,
+                'code' => 200,
+                'csvurl' => $_SERVER['SERVER_NAME'] . '/' . $url
+            ])->setStatusCode(200);
+        }else{
+            return response()->json([
+                'data' => $data,
+                'code' => 200
+            ])->setStatusCode(200);
+        }
     }
 }

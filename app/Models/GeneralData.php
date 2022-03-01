@@ -26,9 +26,61 @@ class GeneralData extends Model
             $model->price_start = round(($model->price_start/1000000), 2);
             $model->square_meter_price = round(($model->square_meter_price/1000), 2);
 
+            $model->phones = trim($model->phones);
+
+            $model->phones = preg_replace(
+                array(
+                    '/[\+]?([7|8])[-|\s]?\([-|\s]?(\d{3})[-|\s]?\)[-|\s]?(\d{3})[-|\s]?(\d{2})[-|\s]?(\d{2})/',
+                    '/[\+]?([7|8])[-|\s]?(\d{3})[-|\s]?(\d{3})[-|\s]?(\d{2})[-|\s]?(\d{2})/',
+                    '/[\+]?([7|8])[-|\s]?\([-|\s]?(\d{4})[-|\s]?\)[-|\s]?(\d{2})[-|\s]?(\d{2})[-|\s]?(\d{2})/',
+                    '/[\+]?([7|8])[-|\s]?(\d{4})[-|\s]?(\d{2})[-|\s]?(\d{2})[-|\s]?(\d{2})/',
+                    '/[\+]?([7|8])[-|\s]?\([-|\s]?(\d{4})[-|\s]?\)[-|\s]?(\d{3})[-|\s]?(\d{3})/',
+                    '/[\+]?([7|8])[-|\s]?(\d{4})[-|\s]?(\d{3})[-|\s]?(\d{3})/',
+                ),
+                array(
+                    '+7 ($2) $3-$4-$5',
+                    '+7 ($2) $3-$4-$5',
+                    '+7 ($2) $3-$4-$5',
+                    '+7 ($2) $3-$4-$5',
+                    '+7 ($2) $3-$4',
+                    '+7 ($2) $3-$4',
+                ),
+                $model->phones
+            );
+
             $value = (($model->price_actual-$model->auction)-$model->price_sale);
+            // $value = ((1650000 - 0) - 0)
+            // $value = 1650000
+
+            $direct_phone = Agent::where('id', $model->agent_id)->first();
+
+            $model->direct_phone = $direct_phone->direct_phone;
+
+            $model->direct_phone = trim($model->direct_phone);
+
+            $model->direct_phone = preg_replace(
+                array(
+                    '/[\+]?([7|8])[-|\s]?\([-|\s]?(\d{3})[-|\s]?\)[-|\s]?(\d{3})[-|\s]?(\d{2})[-|\s]?(\d{2})/',
+                    '/[\+]?([7|8])[-|\s]?(\d{3})[-|\s]?(\d{3})[-|\s]?(\d{2})[-|\s]?(\d{2})/',
+                    '/[\+]?([7|8])[-|\s]?\([-|\s]?(\d{4})[-|\s]?\)[-|\s]?(\d{2})[-|\s]?(\d{2})[-|\s]?(\d{2})/',
+                    '/[\+]?([7|8])[-|\s]?(\d{4})[-|\s]?(\d{2})[-|\s]?(\d{2})[-|\s]?(\d{2})/',
+                    '/[\+]?([7|8])[-|\s]?\([-|\s]?(\d{4})[-|\s]?\)[-|\s]?(\d{3})[-|\s]?(\d{3})/',
+                    '/[\+]?([7|8])[-|\s]?(\d{4})[-|\s]?(\d{3})[-|\s]?(\d{3})/',
+                ),
+                array(
+                    '+7 ($2) $3-$4-$5',
+                    '+7 ($2) $3-$4-$5',
+                    '+7 ($2) $3-$4-$5',
+                    '+7 ($2) $3-$4-$5',
+                    '+7 ($2) $3-$4',
+                    '+7 ($2) $3-$4',
+                ),
+                $model->direct_phone
+            );
+
             if($value > 0)
                 $model->percentage_income = round(($model->price_actual - $model->auction) / $value);
+                // percentage_income = round((16.5 - 0) / 16.5) = 1
             else
                 $model->percentage_income = 0;
 
@@ -37,6 +89,8 @@ class GeneralData extends Model
             } else {
                 $model->_izmen = "";
             }
+
+            $model->auction = $model->auction / 1000000;
 
             $sootn_sign = strpos($model->sootn, '-') === 0 ? '' : '+';
             $model->_soot = $sootn_sign . round($model->sootn) . '%';
@@ -47,15 +101,18 @@ class GeneralData extends Model
             if(empty($model->notRemovedAnalogAdsAvgPrice)){
                 $model->notRemovedAnalogAdsCount = "";
             }else{
+                $higherThanMarketPrice = $model->square_meter_price2 > $model->notRemovedAnalogAdsAvgPrice ? false : true;
                 if ($model->square_meter_price) {
+                    // square_meter_price = 54.28
+                    // notRemovedAnalogAdsAvgPrice = 55402
                     $sootn_square_meter_price_to_analogs = (100-round(($model->notRemovedAnalogAdsAvgPrice*100)/$model->square_meter_price));
                 } else {
                     $sootn_square_meter_price_to_analogs = 0;
                 }
 
-
+                // .($higherThanMarketPrice ? '+' : '-')
                 $notRemovedAnalogAdsAvgPriceSign = strpos($sootn_square_meter_price_to_analogs, '-') === 0 ? "" : "+";
-                $model->notRemovedAnalogAdsAvgPrice = $notRemovedAnalogAdsAvgPriceSign . "." . $sootn_square_meter_price_to_analogs . "%";
+                $model->notRemovedAnalogAdsAvgPrice = $notRemovedAnalogAdsAvgPriceSign."{$sootn_square_meter_price_to_analogs}%";
             }
 
             // к каждой дате прибавляем 3 часа
