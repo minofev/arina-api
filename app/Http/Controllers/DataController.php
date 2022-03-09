@@ -32,6 +32,7 @@ class DataController extends Controller
         $orderedColumns = array(
             'id',
             'id_source',
+            'isAdsApi',
             'adsapi_id',
             'status',
             'have_doubles',
@@ -136,7 +137,7 @@ class DataController extends Controller
         );
 
         // колонки
-        $columnNames = TableSplit::all();
+        $columnNames = TableSplit::where('status', 1)->get();
         return response()->json([
             'columnNames' => $columnNames,
             'orderedColumns' => $orderedColumns
@@ -198,7 +199,7 @@ class DataController extends Controller
                 $whereRaw = $whereRaw . " AND ";
             }
 
-            if($item == 'ad_added' || $item == 'ad_published' || $item == 'ad_remove'){
+            if($item == 'ad_added' || $item == 'ad_published' || $item == 'ad_remove' || $item == 'ad_updated'){
                 // при условии что дата всегда в формате день-месяц-год
                 // поочередность конкретно, на разделитель не смотрим
                 // делим строку по разделителю
@@ -250,7 +251,7 @@ class DataController extends Controller
     public function change(Request $request)
     {
         // если это какие то сокращенные (приведенные) значения
-        if($request->name == "price_actual" || $request->name == "price_actual_to_current_day" || $request->name == "price_start"){
+        if($request->name == "price_actual" || $request->name == "price_actual_to_current_day" || $request->name == "price_start" || $request->name == "price_sale"){
             $request->value = $request->value * 1000000;
         }
         if($request->name == "square_meter_price"){
@@ -263,6 +264,17 @@ class DataController extends Controller
 
         if($request->name == "auction"){
             $request->value = intval($request->value * 1000000);
+        }
+
+        if($request->name == "grand_cian" || $request->name == "grand_avit" || $request->name == "grand_real"
+            || $request->name == "grand_yandk" || $request->name == "grand_dmk" || $request->name == "grand_irn"
+            || $request->name == "grand_pik"){
+            $request->value = intval($request->value * 1000000);
+        }
+
+        if($request->name == 'date_of_purchase_transaction' || $request->name == 'offer_date' || $request->name == 'purchase_advance_date'
+            || $request->name == 'sale_advertising_date' || $request->name == 'date_of_sale_advance' || $request->name == 'date_of_transaction_sale'){
+            $request->value = Carbon::parse($request->value)->format("Y-m-d");
         }
 
         GeneralData::where('id', $request->id)->update([$request->name => $request->value]);
@@ -297,7 +309,7 @@ class DataController extends Controller
                     $whereRaw = $whereRaw . " AND ";
                 }
 
-                if($item == 'ad_added' || $item == 'ad_published' || $item == 'ad_remove'){
+                if($item == 'ad_added' || $item == 'ad_published' || $item == 'ad_remove' || $item == 'ad_updated'){
                     if(iconv_strlen($value) > 12){
                         // если указано от и до
                     }else{
@@ -313,6 +325,19 @@ class DataController extends Controller
                         // оператор
                         $operatorValue = str_replace($value, '', $valueWithOperator);
 
+                        $date = explode(mb_substr($value, 2, 1), $value);
+                        // далее год записываем в $year
+                        $year = $date[2];
+
+                        // если в "году" всего 2 символа, добавляем в начало 20 (чтобы получился 2022 напирмер)
+                        if(iconv_strlen($year) == 2){
+                            $year = "20" . $year;
+                        }
+
+                        // формируем полную дату
+                        $value = $date[0] . "-" . $date[1] . "-" . $year;
+
+
                         if(!$operatorValue || $operatorValue == '='){
                             // если оператора нет
                             // или в качестве оператора жеское сравнение
@@ -323,21 +348,41 @@ class DataController extends Controller
 
                             // формируем запрос
                             // и берем в охват целые сутки (с 00:00 до 24:00)
-                            $whereRaw = $whereRaw . " ($item >= ". (intval($value) - 3600 * 21) ." and $item <= ". (intval($value) + 3600 * 3) .")";
+
+                            $whereRaw = $whereRaw . " ($item >= ". (intval($value)) ." and $item <= ". (intval($value) + 3600 * 24) .")";
                         }
 
                         if($operatorValue && $operatorValue != '='){
                             // переводим в unix метку
                             $value = Carbon::parse($value)->timestamp;
 
-                            $whereRaw = $whereRaw . " $item " . $operatorValue . " " . (intval($value) - 3600 * 21);
+                            $whereRaw = $whereRaw . " $item " . $operatorValue . " " . (intval($value) - 1);
                         }
                     }
                 } else if($item == 'have_doubles') {
                     if($value == 'Да'){$value = 1;} else if($value == 'Нет'){$value = 0;}else{$value = "ERROR";}
 
                     $whereRaw = $whereRaw . $item . " = '" . $value . "'";
-                } else if($item == 'status'){
+                } else if($item == '_soot_analog'){
+                    if($value == '-1'){
+                        $whereRaw = $whereRaw . "sootn_analog LIKE '-%'";
+                    }
+                } else if($item == '_soot_analog_to_current'){
+                    if($value == '-1'){
+                        $whereRaw = $whereRaw . "SootSAnSgdn LIKE '-%'";
+                    }
+                }else if($item == 'street'){
+
+                    $whereRaw = $whereRaw . $item . " LIKE '%" . $value . "%'";
+                }else if($item == 'bonus'){
+
+                    $whereRaw = $whereRaw . $item . " LIKE '%" . $value . "%'";
+                }else if($item == 'isAdsApi'){
+                    if($value == 'Носов'){$value = 0;}
+                    else if($value == 'Ads Api'){$value = 1;}
+
+                    $whereRaw = $whereRaw . $item . " = '" . $value . "'";
+                }else if($item == 'status'){
                     if($value == 'Все записи'){
                         $value = "IS NOT NULL";
 
@@ -375,7 +420,10 @@ class DataController extends Controller
                     }
 
                     $whereRaw = $whereRaw . "$item = '$value'";
-                } else if($item == 'id_source'){
+                } else if($item == 'address'){
+
+                    $whereRaw = $whereRaw . "$item LIKE '%$value%'";
+                }else if($item == 'id_source'){
                     if($value == 'Авито'){
                         $value = 2;
                     }else if($value == 'Циан'){
@@ -397,7 +445,7 @@ class DataController extends Controller
                 $foreachCounter++;
 
                 if($foreachCounter > 1){
-                    $sortRaw = $sortRaw . " ";
+                    $sortRaw = $sortRaw . ", ";
                 }
                 $sortRaw = $sortRaw . "$item " . strtoupper($value);
             }
@@ -419,6 +467,7 @@ class DataController extends Controller
         $orderedColumns = array(
             'id',
             'id_source',
+            'isAdsApi',
             'adsapi_id',
             'status',
             'have_doubles',
@@ -556,12 +605,16 @@ class DataController extends Controller
             return response()->json([
                 'data' => $data,
                 'code' => 200,
+                'queryWhere' => $whereRaw,
+                'queryOrder' => $sortRaw,
                 'csvurl' => $_SERVER['SERVER_NAME'] . '/' . $url
             ])->setStatusCode(200);
         }else{
             return response()->json([
                 'data' => $data,
-                'code' => 200
+                'code' => 200,
+                'queryWhere' => $whereRaw,
+                'queryOrder' => $sortRaw
             ])->setStatusCode(200);
         }
     }
