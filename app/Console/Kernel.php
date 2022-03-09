@@ -16,7 +16,7 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule)
     {
         // $schedule->command('inspire')->hourly();
-        $schedule->command('duplicates:search')->monthlyOn(18, '1:05');;
+        $schedule->command('cities:rewrite')->everyThirtyMinutes();
     }
 
     /**
