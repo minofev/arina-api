@@ -28,3 +28,5 @@ Route::group(['prefix' => 'v2'], function($router) {
         Route::post('/get', [\App\Http\Controllers\DataController::class, 'v2__get']);
     });
 });
+
+Route::post('/soot', [\App\Http\Controllers\SootController::class, 'set']);

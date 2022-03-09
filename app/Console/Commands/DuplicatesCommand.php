@@ -5,7 +5,9 @@ namespace App\Console\Commands;
 use App\Jobs\Duplicates2Job;
 use App\Jobs\DuplicatesJob;
 use App\Models\GeneralData;
+use App\Models\User;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 
 class DuplicatesCommand extends Command
